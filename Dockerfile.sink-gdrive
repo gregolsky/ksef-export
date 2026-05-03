@@ -14,8 +14,8 @@ COPY tsconfig.base.json ./
 COPY packages/shared ./packages/shared
 COPY packages/sink-gdrive ./packages/sink-gdrive
 
-RUN pnpm --filter @ksef2gdrive/shared build
-RUN pnpm --filter @ksef2gdrive/sink-gdrive build
+RUN pnpm --filter @ksef-export/shared build
+RUN pnpm --filter @ksef-export/sink-gdrive build
 
 # ──────────────────────────────────────────────
 FROM node:22-alpine AS runtime

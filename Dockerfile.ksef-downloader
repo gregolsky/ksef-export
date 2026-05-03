@@ -14,8 +14,8 @@ COPY tsconfig.base.json ./
 COPY packages/shared ./packages/shared
 COPY packages/ksef-downloader ./packages/ksef-downloader
 
-RUN pnpm --filter @ksef2gdrive/shared build
-RUN pnpm --filter @ksef2gdrive/ksef-downloader build
+RUN pnpm --filter @ksef-export/shared build
+RUN pnpm --filter @ksef-export/ksef-downloader build
 
 # ──────────────────────────────────────────────
 FROM node:22-alpine AS runtime
