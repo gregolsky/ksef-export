@@ -1,4 +1,4 @@
-# 🧾 ksef2gdrive
+# 🧾 ksef-export
 
 [![Build and push Docker images](https://github.com/gregolsky/ksef-export/actions/workflows/docker.yml/badge.svg)](https://github.com/gregolsky/ksef-export/actions/workflows/docker.yml)
 
@@ -22,10 +22,10 @@ Two services, one shared volume:
 
 | Service | Package | Role |
 |---|---|---|
-| `ksef-downloader` | `@ksef2gdrive/ksef-downloader` | One-shot job: authenticates with KSeF, downloads PDFs to `/inbox`, then POSTs an `InvoicesDownloaded` event to every configured sink. |
-| `sink-gdrive` | `@ksef2gdrive/sink-gdrive` | Long-running HTTP service: listens for `InvoicesDownloaded` events and uploads the referenced files to Google Drive. |
+| `ksef-downloader` | `@ksef-export/ksef-downloader` | One-shot job: authenticates with KSeF, downloads PDFs to `/inbox`, then POSTs an `InvoicesDownloaded` event to every configured sink. |
+| `sink-gdrive` | `@ksef-export/sink-gdrive` | Long-running HTTP service: listens for `InvoicesDownloaded` events and uploads the referenced files to Google Drive. |
 
-A third package, `@ksef2gdrive/shared`, contains common types, schemas, and utilities used by both services.
+A third package, `@ksef-export/shared`, contains common types, schemas, and utilities used by both services.
 
 ---
 
@@ -163,7 +163,7 @@ The container has no built-in scheduler; run it from whatever scheduler fits you
 
 ```bash
 # cron — run on the 1st of every month, sync the previous month
-0 6 1 * * docker compose -f /home/user/ksef2gdrive/docker-compose.yml \
+0 6 1 * * docker compose -f /home/user/ksef-export/docker-compose.yml \
   run --rm ksef-downloader \
   --year $(date -d '-1 month' +%Y) --month $(date -d '-1 month' +%-m)
 ```
@@ -209,11 +209,11 @@ pnpm install
 pnpm build
 
 # Run ksef-downloader CLI directly (requires .env in repo root)
-KSEF_ENV=test pnpm --filter @ksef2gdrive/ksef-downloader dev -- \
+KSEF_ENV=test pnpm --filter @ksef-export/ksef-downloader dev -- \
   --year 2026 --month 4 --subject received
 
 # Run sink-gdrive locally
-pnpm --filter @ksef2gdrive/sink-gdrive dev
+pnpm --filter @ksef-export/sink-gdrive dev
 ```
 
 ### 🧪 Tests

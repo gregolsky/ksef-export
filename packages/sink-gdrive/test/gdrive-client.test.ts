@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { noopLogger } from '@ksef2gdrive/shared'
+import { noopLogger } from '@ksef-export/shared'
 
 // Stub googleapis before importing the client
 const fakeDrive = {

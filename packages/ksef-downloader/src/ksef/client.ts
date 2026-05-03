@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { Logger } from '@ksef2gdrive/shared'
+import type { Logger } from '@ksef-export/shared'
 import { encryptKsefToken } from './crypto.js'
 
 export type KsefEnv = 'prod' | 'test'

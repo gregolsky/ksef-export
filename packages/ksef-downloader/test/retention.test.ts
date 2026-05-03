@@ -3,7 +3,7 @@ import { mkdtemp, rm, mkdir, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { sweepRetention } from '../src/retention.js'
-import { noopLogger } from '@ksef2gdrive/shared'
+import { noopLogger } from '@ksef-export/shared'
 
 async function seed(inboxPath: string, year: number, month: number, markers: string[] = [], hasPdf = true) {
   const mm = String(month).padStart(2, '0')

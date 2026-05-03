@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createServer } from 'node:http'
-import { noopLogger } from '@ksef2gdrive/shared'
+import { noopLogger } from '@ksef-export/shared'
 
 vi.mock('googleapis', () => ({
   google: {

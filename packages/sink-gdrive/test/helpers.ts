@@ -1,5 +1,5 @@
-import { noopLogger } from '@ksef2gdrive/shared'
-import type { Logger } from '@ksef2gdrive/shared'
+import { noopLogger } from '@ksef-export/shared'
+import type { Logger } from '@ksef-export/shared'
 
 export { noopLogger }
 export type { Logger }

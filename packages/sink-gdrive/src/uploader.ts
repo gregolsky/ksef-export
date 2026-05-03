@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { GoogleDriveClient } from './gdrive/client.js'
 import { writeSyncMarker } from './marker.js'
-import { formatSubdir, sanitizeFilename, type Logger, type InvoicesDownloadedEvent, type SinkResult } from '@ksef2gdrive/shared'
+import { formatSubdir, sanitizeFilename, type Logger, type InvoicesDownloadedEvent, type SinkResult } from '@ksef-export/shared'
 import type { OAuth2Client } from 'google-auth-library'
 
 export interface UploaderConfig {

@@ -1,5 +1,5 @@
 {
-  "name": "@ksef2gdrive/sink-gdrive",
+  "name": "@ksef-export/sink-gdrive",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@ksef2gdrive/shared": "workspace:*",
+    "@ksef-export/shared": "workspace:*",
     "dotenv": "^16.4.0",
     "google-auth-library": "^9.0.0",
     "googleapis": "^144.0.0",

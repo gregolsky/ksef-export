@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.sink-gdrive
-    image: ghcr.io/gregolsky/ksef2gdrive-sink-gdrive:latest
+    image: ghcr.io/gregolsky/ksef-export-sink-gdrive:latest
     env_file: .env
     environment:
       INBOX_PATH: /inbox
@@ -23,7 +23,7 @@ services:
 
   # Uncomment and add additional sinks here:
   # sink-dropbox:
-  #   image: ghcr.io/gregolsky/ksef2gdrive-sink-dropbox:main
+  #   image: ghcr.io/gregolsky/ksef-export-sink-dropbox:main
   #   environment:
   #     INBOX_PATH: /inbox
   #     SINK_MARKER: .dropbox-synced
@@ -39,7 +39,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ksef-downloader
-    image: ghcr.io/gregolsky/ksef2gdrive-ksef-downloader:latest
+    image: ghcr.io/gregolsky/ksef-export-ksef-downloader:latest
     env_file: .env
     environment:
       INBOX_PATH: /inbox

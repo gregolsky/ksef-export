@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { generateKeyPairSync } from 'node:crypto'
 import { KsefClient, KsefError } from '../src/ksef/client.js'
-import { noopLogger } from '@ksef2gdrive/shared'
+import { noopLogger } from '@ksef-export/shared'
 import { jsonResponse, binaryResponse } from './helpers.js'
 
 function makeCertBase64(): string {

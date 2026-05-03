@@ -1,6 +1,6 @@
 import { readdir, rm, access } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Logger } from '@ksef2gdrive/shared'
+import type { Logger } from '@ksef-export/shared'
 
 const YEAR_RE = /^\d{4}$/
 const MONTH_RE = /^\d{2}$/

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { emitToSinks, shutdownSinks } from '../src/eventEmitter.js'
-import { noopLogger } from '@ksef2gdrive/shared'
+import { noopLogger } from '@ksef-export/shared'
 import { jsonResponse } from './helpers.js'
-import type { InvoicesDownloadedEvent } from '@ksef2gdrive/shared'
+import type { InvoicesDownloadedEvent } from '@ksef-export/shared'
 
 const sampleEvent: InvoicesDownloadedEvent = {
   event: 'InvoicesDownloaded',

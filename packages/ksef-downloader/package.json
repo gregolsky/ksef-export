@@ -1,5 +1,5 @@
 {
-  "name": "@ksef2gdrive/ksef-downloader",
+  "name": "@ksef-export/ksef-downloader",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@ksef2gdrive/shared": "workspace:*",
+    "@ksef-export/shared": "workspace:*",
     "commander": "^12.0.0",
     "dotenv": "^16.4.0",
     "zod": "^3.23.0"

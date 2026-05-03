@@ -1,4 +1,4 @@
-import type { Logger } from '@ksef2gdrive/shared'
+import type { Logger } from '@ksef-export/shared'
 
 function ts(): string {
   return new Date().toISOString()

@@ -1,4 +1,4 @@
-import type { InvoicesDownloadedEvent, SinkEvent, SinkResult, Logger } from '@ksef2gdrive/shared'
+import type { InvoicesDownloadedEvent, SinkEvent, SinkResult, Logger } from '@ksef-export/shared'
 
 export interface SinkOutcome {
   url: string

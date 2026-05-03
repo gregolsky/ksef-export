@@ -1,7 +1,7 @@
 import { KsefClient, type KsefCredentials } from './ksef/client.js'
 import { writePdfIfMissing } from './inbox.js'
-import { monthBounds, invoicePath, type Logger } from '@ksef2gdrive/shared'
-import type { InvoiceFile } from '@ksef2gdrive/shared'
+import { monthBounds, invoicePath, type Logger } from '@ksef-export/shared'
+import type { InvoiceFile } from '@ksef-export/shared'
 
 export interface SyncToInboxOptions {
   subject: 'both' | 'received' | 'issued'

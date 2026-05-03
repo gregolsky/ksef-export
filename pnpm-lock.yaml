@@ -10,7 +10,7 @@ importers:
 
   packages/ksef-downloader:
     dependencies:
-      '@ksef2gdrive/shared':
+      '@ksef-export/shared':
         specifier: workspace:*
         version: link:../shared
       commander:
@@ -60,7 +60,7 @@ importers:
 
   packages/sink-gdrive:
     dependencies:
-      '@ksef2gdrive/shared':
+      '@ksef-export/shared':
         specifier: workspace:*
         version: link:../shared
       dotenv:

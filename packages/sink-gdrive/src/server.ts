@@ -1,8 +1,8 @@
 import { createServer, type Server } from 'node:http'
-import { SinkEventSchema } from '@ksef2gdrive/shared'
+import { SinkEventSchema } from '@ksef-export/shared'
 import { handleInvoicesDownloaded, type UploaderConfig } from './uploader.js'
 import type { OAuth2Client } from 'google-auth-library'
-import type { Logger } from '@ksef2gdrive/shared'
+import type { Logger } from '@ksef-export/shared'
 
 export interface ServerConfig {
   port: number

@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream'
 import { google, type drive_v3 } from 'googleapis'
 import type { OAuth2Client } from 'google-auth-library'
-import type { Logger } from '@ksef2gdrive/shared'
+import type { Logger } from '@ksef-export/shared'
 
 export class GoogleDriveClient {
   private drive: drive_v3.Drive

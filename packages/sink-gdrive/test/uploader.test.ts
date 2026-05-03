@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mkdtemp, rm, mkdir, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { noopLogger } from '@ksef2gdrive/shared'
-import type { InvoicesDownloadedEvent } from '@ksef2gdrive/shared'
+import { noopLogger } from '@ksef-export/shared'
+import type { InvoicesDownloadedEvent } from '@ksef-export/shared'
 
 const fakeDrive = {
   files: {
