@@ -109,7 +109,7 @@ export class KsefClient {
     let attempt = 0
     const maxAttempts = 4
 
-    const fetchInit: RequestInit = { method, headers }
+    const fetchInit: RequestInit = { method, headers, signal: AbortSignal.timeout(30_000) }
     if (body !== undefined) {
       fetchInit.body = JSON.stringify(body)
     }

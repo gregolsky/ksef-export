@@ -2,11 +2,11 @@
 
 HIGH PRIORITY
 -------------
-[ ] Add AbortSignal.timeout() to all fetch() calls
-      - packages/ksef-downloader/src/ksef/client.ts (KSeF API calls)
-      - packages/ksef-downloader/src/eventEmitter.ts:60 (sink POST calls)
+[x] Add AbortSignal.timeout() to all fetch() calls
+      - packages/ksef-downloader/src/ksef/client.ts (KSeF API calls) — 30s
+      - packages/ksef-downloader/src/eventEmitter.ts:60 (sink POST calls) — 10s
 
-[ ] Set chmod 600 on OAuth token cache after writing
+[x] Set chmod 600 on OAuth token cache after writing
       - packages/sink-gdrive/src/gdriveAuth.ts
 
 MEDIUM PRIORITY

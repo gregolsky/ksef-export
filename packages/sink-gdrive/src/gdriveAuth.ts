@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, chmod } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { createInterface } from 'node:readline'
 import { dirname } from 'node:path'
@@ -66,6 +66,7 @@ export async function getAuthenticatedClient(
 async function persistToken(client: OAuth2Client, path: string): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, JSON.stringify(client.credentials, null, 2), 'utf8')
+  await chmod(path, 0o600)
 }
 
 function isExpired(token: Credentials): boolean {

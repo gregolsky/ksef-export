@@ -61,6 +61,7 @@ async function postEvent(url: string, event: SinkEvent): Promise<SinkOutcome> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(event),
+      signal: AbortSignal.timeout(10_000),
     })
   } catch (err) {
     return {
