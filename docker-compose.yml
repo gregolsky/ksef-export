@@ -1,0 +1,10 @@
+services:
+  ksef2gdrive:
+    build: .
+    image: ksef2gdrive:latest
+    env_file: .env
+    volumes:
+      - ./secrets:/secrets:ro   # mount google_client.json here
+      - ./data:/data            # OAuth token cache persisted here
+    # Override CMD to pass year/month at runtime:
+    # docker compose run ksef2gdrive --year 2026 --month 4
