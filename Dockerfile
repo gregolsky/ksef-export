@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 WORKDIR /build
 
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/core/package.json ./packages/core/
 COPY packages/cli/package.json ./packages/cli/
 
@@ -17,22 +17,13 @@ COPY packages/cli ./packages/cli
 RUN pnpm -r build
 
 # ──────────────────────────────────────────────
+# Runtime: tsup bundles all deps into dist/main.js — no node_modules needed
 FROM node:22-alpine AS runtime
-
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml ./
-COPY packages/core/package.json ./packages/core/
-COPY packages/cli/package.json ./packages/cli/
+COPY --from=build /build/packages/cli/dist/main.js ./main.js
 
-RUN pnpm install --frozen-lockfile --prod
-
-COPY --from=build /build/packages/core/dist ./packages/core/dist
-COPY --from=build /build/packages/cli/dist ./packages/cli/dist
-
-# Non-root user
 USER node
 
-ENTRYPOINT ["node", "/app/packages/cli/dist/main.js"]
+ENTRYPOINT ["node", "/app/main.js"]
