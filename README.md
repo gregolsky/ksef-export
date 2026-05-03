@@ -1,6 +1,6 @@
 # 🧾 ksef2gdrive
 
-[![Build and push Docker images](https://github.com/gregolsky/ksef2gdrive/actions/workflows/docker.yml/badge.svg)](https://github.com/gregolsky/ksef2gdrive/actions/workflows/docker.yml)
+[![Build and push Docker images](https://github.com/gregolsky/ksef-export/actions/workflows/docker.yml/badge.svg)](https://github.com/gregolsky/ksef-export/actions/workflows/docker.yml)
 
 Downloads invoices for a given month from Poland's [KSeF](https://ksef.podatki.gov.pl/) (Krajowy System e-Faktur) and uploads them as PDFs to one or more storage sinks (Google Drive, and more in the future).
 
