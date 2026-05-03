@@ -1,0 +1,77 @@
+services:
+  mock-ksef:
+    build:
+      context: ./mock-ksef
+    environment:
+      PORT: "8081"
+      FIXTURE_PATH: /fixtures/one-invoice.json
+      SUBJECT: "${SMOKE_SUBJECT:-both}"
+    volumes:
+      - ./fixtures:/fixtures:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/api/v2/security/public-key-certificates"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  stub-sink-a:
+    build:
+      context: ./stub-sink
+    environment:
+      PORT: "8080"
+      SINK_NAME: sink-a
+      INBOX_PATH: /inbox
+      LOG_PATH: /logs/sink-a-events.jsonl
+      FORCE_FAIL: "${SINK_A_FAIL:-0}"
+    volumes:
+      - inbox:/inbox
+      - logs:/logs
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  stub-sink-b:
+    build:
+      context: ./stub-sink
+    environment:
+      PORT: "8080"
+      SINK_NAME: sink-b
+      INBOX_PATH: /inbox
+      LOG_PATH: /logs/sink-b-events.jsonl
+      FORCE_FAIL: "${SINK_B_FAIL:-0}"
+    volumes:
+      - inbox:/inbox
+      - logs:/logs
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  ksef-downloader:
+    image: ksef-downloader:smoke
+    environment:
+      KSEF_TOKEN: fake-token
+      KSEF_NIP: "1234567890"
+      KSEF_ENV: test
+      KSEF_BASE_URL: http://mock-ksef:8081/api/v2
+      INBOX_PATH: /inbox
+      SINK_URLS: "${SMOKE_SINK_URLS:-http://stub-sink-a:8080,http://stub-sink-b:8080}"
+      RETENTION_DAYS: "${SMOKE_RETENTION_DAYS:-10}"
+      EXPECTED_SINK_MARKERS: "${SMOKE_EXPECTED_MARKERS:-.sink-a-synced}"
+    volumes:
+      - inbox:/inbox
+    depends_on:
+      mock-ksef:
+        condition: service_healthy
+      stub-sink-a:
+        condition: service_healthy
+      stub-sink-b:
+        condition: service_healthy
+    profiles: ["job"]
+
+volumes:
+  inbox:
+  logs:

@@ -1,0 +1,7 @@
+{
+  "invoices": [
+    { "ksefReferenceNumber": "20260401-RR-ISSUED001-20260401-1" },
+    { "ksefReferenceNumber": "20260401-RR-ISSUED002-20260401-2" },
+    { "ksefReferenceNumber": "20260401-RR-RECEIVED001-20260401-3" }
+  ]
+}

@@ -1,17 +1,31 @@
 # 🧾 ksef2gdrive
 
-[![Build and push Docker image](https://github.com/gregolsky/ksef2gdrive/actions/workflows/docker.yml/badge.svg)](https://github.com/gregolsky/ksef2gdrive/actions/workflows/docker.yml)
+[![Build and push Docker images](https://github.com/gregolsky/ksef2gdrive/actions/workflows/docker.yml/badge.svg)](https://github.com/gregolsky/ksef2gdrive/actions/workflows/docker.yml)
 
-Downloads invoices for a given month from Poland's [KSeF](https://ksef.podatki.gov.pl/) (Krajowy System e-Faktur) and uploads them as PDFs to Google Drive.
+Downloads invoices for a given month from Poland's [KSeF](https://ksef.podatki.gov.pl/) (Krajowy System e-Faktur) and uploads them as PDFs to one or more storage sinks (Google Drive, and more in the future).
+
+---
 
 ## 🏗️ Architecture
 
-The project is a pnpm monorepo:
+```
+┌───────────────────┐    writes PDFs   ┌──────────┐    POST /events    ┌──────────────┐
+│  ksef-downloader  │ ───────────────▶ │  inbox/  │ ─────────────────▶ │ sink-gdrive  │
+│    (one-shot)     │                  │ (volume) │   {files: [...]}   │  (HTTP svc)  │
+└───────────────────┘                  └──────────┘                    └──────────────┘
+                                                          │
+                                                          └──────────────▶  sink-dropbox
+                                                                          (future sink)
+```
 
-| Package | Purpose |
-|---|---|
-| `@ksef2gdrive/core` | Reusable library — `syncMonth()`, `KsefClient`, `GoogleDriveClient`. No `process.env`, no console I/O, fully injectable. Ready to be called from a future web backend. |
-| `@ksef2gdrive/cli` | Thin Docker/CLI wrapper — reads env vars, handles Google auth, calls `syncMonth()`. |
+Two services, one shared volume:
+
+| Service | Package | Role |
+|---|---|---|
+| `ksef-downloader` | `@ksef2gdrive/ksef-downloader` | One-shot job: authenticates with KSeF, downloads PDFs to `/inbox`, then POSTs an `InvoicesDownloaded` event to every configured sink. |
+| `sink-gdrive` | `@ksef2gdrive/sink-gdrive` | Long-running HTTP service: listens for `InvoicesDownloaded` events and uploads the referenced files to Google Drive. |
+
+A third package, `@ksef2gdrive/shared`, contains common types, schemas, and utilities used by both services.
 
 ---
 
@@ -83,37 +97,26 @@ cp ~/Downloads/client_secret_*.json secrets/google_client.json
 # 3b. Service account — copy your key
 # cp ~/Downloads/sa_key.json secrets/google_sa_key.json
 
-# 4. Pull the pre-built image (or build locally — see below)
-docker pull ghcr.io/gregolsky/ksef2gdrive:main
+# 4. Start the sink (stays running in the background)
+docker compose up -d sink-gdrive
 
-# 5. First run (OAuth: interactive consent prompt; service account: fully automated)
-docker run --rm \
-  --env-file .env \
-  -v "$PWD/secrets:/secrets:ro" \
-  -v "$PWD/data:/data" \
-  ghcr.io/gregolsky/ksef2gdrive:main \
-  --year 2026 --month 4
+# 5. Run the downloader for a given month (one-off)
+docker compose run --rm ksef-downloader --year 2026 --month 4
+
+# 6. For a one-off run that also shuts down the sink when done:
+docker compose run --rm ksef-downloader --year 2026 --month 4 --shutdown-sinks
 ```
 
-Or with Docker Compose:
-
-```bash
-docker compose run --rm ksef2gdrive --year 2026 --month 4
-```
-
-### All CLI options
+### All downloader options
 
 ```
 Options:
-  -y, --year <number>            Year (e.g. 2026)                            [required]
-  -m, --month <number>           Month 1-12 (e.g. 4)                         [required]
-  -s, --subject <type>           both | received | issued      (default: both)
-  --gdrive-root <name>           Root folder name in Google Drive (default: Invoices)
-  --gdrive-subdir <format>       Month subfolder — {year} and {month} tokens
-                                 (default: {year}/{month} → Invoices/2026/04)
-  --gdrive-parent-id <id>        Parent folder ID in Google Drive (default: My Drive root)
-  --gdrive-auth <type>           oauth | service-account  (auto-detected if omitted)
-  --env <env>                    prod | test              (default: prod)
+  -y, --year <number>     Year (e.g. 2026)                          [required]
+  -m, --month <number>    Month 1-12 (e.g. 4)                       [required]
+  -s, --subject <type>    both | received | issued    (default: both)
+  --sink <url>            Extra sink URL (repeatable, appends to SINK_URLS)
+  --env <env>             prod | test                (default: prod)
+  --shutdown-sinks        Send Shutdown event to all sinks after completing
 ```
 
 ### 📁 Google Drive folder layout (default)
@@ -131,7 +134,26 @@ My Drive
 
 ### ♻️ Idempotency
 
-Re-running the same command is safe — files already present in Drive are skipped (matched by filename). No duplicates are created.
+- **Downloader**: if a PDF already exists on disk (`/inbox/...`), it is not re-downloaded from KSeF.
+- **Sink**: if a file with the same name already exists in the target Drive folder, it is skipped. No duplicates are created.
+
+---
+
+## 🗑️ Retention
+
+The downloader runs a retention sweep at the end of every run. A per-month directory under `/inbox` is deleted when:
+
+1. The current date is more than `RETENTION_DAYS` past the last day of that month (default: 10 days).
+2. Every marker file listed in `EXPECTED_SINK_MARKERS` exists in that directory (default: none required — pure time-based).
+
+Each sink writes a marker file (e.g. `.gdrive-synced`) upon successful sync, so you can configure retention to only delete data after all your sinks have confirmed they processed it.
+
+```bash
+# .env / docker-compose.yml
+RETENTION_DAYS=10
+EXPECTED_SINK_MARKERS=.gdrive-synced
+# EXPECTED_SINK_MARKERS=.gdrive-synced,.dropbox-synced  # wait for all sinks
+```
 
 ---
 
@@ -141,10 +163,8 @@ The container has no built-in scheduler; run it from whatever scheduler fits you
 
 ```bash
 # cron — run on the 1st of every month, sync the previous month
-0 6 1 * * docker run --rm --env-file /home/user/ksef2gdrive/.env \
-  -v /home/user/ksef2gdrive/secrets:/secrets:ro \
-  -v /home/user/ksef2gdrive/data:/data \
-  ghcr.io/gregolsky/ksef2gdrive:main \
+0 6 1 * * docker compose -f /home/user/ksef2gdrive/docker-compose.yml \
+  run --rm ksef-downloader \
   --year $(date -d '-1 month' +%Y) --month $(date -d '-1 month' +%-m)
 ```
 
@@ -152,14 +172,32 @@ The container has no built-in scheduler; run it from whatever scheduler fits you
 
 ## ⚙️ Environment variables
 
-| Variable | Default (in container) | Description |
+### ksef-downloader
+
+| Variable | Default | Description |
 |---|---|---|
 | `KSEF_TOKEN` | — (required) | KSeF authorization token |
 | `KSEF_NIP` | — (required) | Your NIP (10 digits, no dashes) |
 | `KSEF_ENV` | `prod` | `prod` or `test` |
+| `INBOX_PATH` | `/inbox` | Path to the shared inbox volume |
+| `SINK_URLS` | — | Comma-separated sink base URLs |
+| `RETENTION_DAYS` | `10` | Days after end-of-month before a directory is eligible for deletion |
+| `EXPECTED_SINK_MARKERS` | — | Comma-separated marker filenames that must be present before deletion |
+| `DEBUG` | — | Set to any value to enable debug logging |
+
+### sink-gdrive
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `8080` | HTTP port |
+| `INBOX_PATH` | `/inbox` | Path to the shared inbox volume |
+| `SINK_MARKER` | `.gdrive-synced` | Marker filename written after a successful sync |
 | `GOOGLE_SERVICE_ACCOUNT_KEY` | — | Path to service account JSON key (enables SA auth) |
 | `GOOGLE_OAUTH_CLIENT_SECRETS` | `/secrets/google_client.json` | Path to OAuth client JSON |
 | `GOOGLE_TOKEN_CACHE` | `/data/gdrive_token.json` | Where to persist the OAuth refresh token |
+| `GDRIVE_ROOT` | `Invoices` | Root folder name in Google Drive |
+| `GDRIVE_SUBDIR` | `{year}/{month}` | Month subfolder format |
+| `GDRIVE_PARENT_ID` | `root` | Parent folder ID in Google Drive |
 | `DEBUG` | — | Set to any value to enable debug logging |
 
 ---
@@ -170,19 +208,34 @@ The container has no built-in scheduler; run it from whatever scheduler fits you
 pnpm install
 pnpm build
 
-# Run the CLI directly (requires .env in repo root)
-KSEF_ENV=test pnpm --filter @ksef2gdrive/cli dev -- --year 2026 --month 4 --subject received
-```
+# Run ksef-downloader CLI directly (requires .env in repo root)
+KSEF_ENV=test pnpm --filter @ksef2gdrive/ksef-downloader dev -- \
+  --year 2026 --month 4 --subject received
 
-### Build Docker image locally
-
-```bash
-docker compose build
+# Run sink-gdrive locally
+pnpm --filter @ksef2gdrive/sink-gdrive dev
 ```
 
 ### 🧪 Tests
 
 ```bash
-pnpm test
+pnpm test           # all unit tests across all packages
 ```
 
+### 🔬 Smoke tests (docker compose, no real KSeF/Drive)
+
+```bash
+# Build the images first
+docker build -f Dockerfile.ksef-downloader -t ksef-downloader:smoke .
+docker build -f Dockerfile.sink-gdrive -t sink-gdrive:smoke .
+
+pnpm smoke
+```
+
+The smoke suite starts a `mock-ksef` and `stub-sink` containers, runs 6 scenarios (happy path, multi-sink fan-out with one failing, idempotency, empty month, retention, all-sinks-down), then tears everything down.
+
+### Build Docker images locally
+
+```bash
+docker compose build
+```

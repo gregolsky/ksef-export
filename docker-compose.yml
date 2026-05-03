@@ -1,10 +1,62 @@
 services:
-  ksef2gdrive:
-    build: .
-    image: ksef2gdrive:latest
+  sink-gdrive:
+    build:
+      context: .
+      dockerfile: Dockerfile.sink-gdrive
+    image: ghcr.io/gregolsky/ksef2gdrive-sink-gdrive:latest
     env_file: .env
+    environment:
+      INBOX_PATH: /inbox
+      SINK_MARKER: .gdrive-synced
+      # GDRIVE_ROOT: Invoices
+      # GDRIVE_SUBDIR: "{year}/{month}"
+      # GDRIVE_PARENT_ID: root
     volumes:
-      - ./secrets:/secrets:ro   # mount google_client.json here
-      - ./data:/data            # OAuth token cache persisted here
-    # Override CMD to pass year/month at runtime:
-    # docker compose run ksef2gdrive --year 2026 --month 4
+      - ./secrets:/secrets:ro
+      - ./data:/data
+      - inbox:/inbox
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+
+  # Uncomment and add additional sinks here:
+  # sink-dropbox:
+  #   image: ghcr.io/gregolsky/ksef2gdrive-sink-dropbox:main
+  #   environment:
+  #     INBOX_PATH: /inbox
+  #     SINK_MARKER: .dropbox-synced
+  #   volumes:
+  #     - inbox:/inbox:ro
+  #   healthcheck:
+  #     test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+  #     interval: 5s
+  #     timeout: 2s
+  #     retries: 12
+
+  ksef-downloader:
+    build:
+      context: .
+      dockerfile: Dockerfile.ksef-downloader
+    image: ghcr.io/gregolsky/ksef2gdrive-ksef-downloader:latest
+    env_file: .env
+    environment:
+      INBOX_PATH: /inbox
+      # Comma-separated list of sink URLs. Add more sinks here as you bring them online.
+      SINK_URLS: http://sink-gdrive:8080
+      # SINK_URLS: http://sink-gdrive:8080,http://sink-dropbox:8080
+      # Retention: delete {year}/{MM} directories after this many days past end-of-month
+      # (only if all expected markers are present).
+      RETENTION_DAYS: "10"
+      EXPECTED_SINK_MARKERS: .gdrive-synced
+      # EXPECTED_SINK_MARKERS: .gdrive-synced,.dropbox-synced
+    volumes:
+      - inbox:/inbox
+    depends_on:
+      sink-gdrive:
+        condition: service_healthy
+    profiles: ["job"]
+
+volumes:
+  inbox:
