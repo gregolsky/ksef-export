@@ -1,36 +1,7 @@
 == Code Review Action Items ==
 
-HIGH PRIORITY
--------------
-[x] Add AbortSignal.timeout() to all fetch() calls
-      - packages/ksef-downloader/src/ksef/client.ts (KSeF API calls) — 30s
-      - packages/ksef-downloader/src/eventEmitter.ts:60 (sink POST calls) — 10s
-
-[x] Set chmod 600 on OAuth token cache after writing
-      - packages/sink-gdrive/src/gdriveAuth.ts
-
-MEDIUM PRIORITY
----------------
-[x] Improve error context for missing PDF in uploader
-      - packages/sink-gdrive/src/uploader.ts ~line 58
-      - Include file path and cause in the caught error message
-
-[x] Restrict retention month regex to 01-12
-      - packages/ksef-downloader/src/retention.ts
-      - Change MONTH_RE to /^(0[1-9]|1[0-2])$/
-
-[x] Validate SINK_URLS format at startup
-      - packages/ksef-downloader/src/main.ts
-
-[x] Add retry logic for Google Drive API calls
-      - packages/sink-gdrive/src/gdrive/client.ts
-      - Mirror the retry-with-backoff pattern used in the KSeF client
-
 LOW PRIORITY
 ------------
-[x] Validate NIP format (must be exactly 10 digits)
-      - packages/ksef-downloader/src/main.ts
-
 [ ] Harden Google Drive query string escaping
       - packages/sink-gdrive/src/gdrive/client.ts
       - Current single-quote escaping is fragile for filenames with other special chars
