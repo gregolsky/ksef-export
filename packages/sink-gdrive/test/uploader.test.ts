@@ -144,6 +144,23 @@ describe('handleInvoicesDownloaded', () => {
     await expect(access(markerPath)).rejects.toThrow()
   })
 
+  it('includes the file path in the error message when PDF is missing', async () => {
+    const event: InvoicesDownloadedEvent = {
+      event: 'InvoicesDownloaded',
+      year: 2026,
+      month: 4,
+      files: [{ subject: 'received', ref: 'MISSING', path: '2026/04/received/MISSING.pdf' }],
+    }
+
+    fakeDrive.files.list.mockResolvedValue({ data: { files: [] } })
+    fakeDrive.files.create.mockResolvedValue({ data: { id: 'some-id' } })
+
+    const result = await handleInvoicesDownloaded(event, {} as never, uploaderConfig(tmpDir))
+
+    expect(result.files[0]?.status).toBe('failed')
+    expect(result.files[0]?.error).toContain('2026/04/received/MISSING.pdf')
+  })
+
   it('handles empty files array gracefully', async () => {
     const event: InvoicesDownloadedEvent = {
       event: 'InvoicesDownloaded',

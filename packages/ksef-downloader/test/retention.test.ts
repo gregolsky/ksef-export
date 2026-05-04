@@ -82,6 +82,25 @@ describe('sweepRetention', () => {
     expect(await exists(miscDir)).toBe(true)
   })
 
+  it('ignores directories with invalid month numbers (00, 13)', async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'retention-test-'))
+    const yearPath = join(tmpDir, '2026')
+    await mkdir(yearPath)
+    // Create month dirs with out-of-range values
+    const m00 = join(yearPath, '00')
+    const m13 = join(yearPath, '13')
+    await mkdir(m00)
+    await mkdir(m13)
+    await writeFile(join(m00, 'file.pdf'), 'dummy')
+    await writeFile(join(m13, 'file.pdf'), 'dummy')
+
+    await sweepRetention(tmpDir, 0, [], now, noopLogger)
+
+    // Both should be untouched because MONTH_RE rejects them
+    expect(await exists(m00)).toBe(true)
+    expect(await exists(m13)).toBe(true)
+  })
+
   it('removes the year directory when all its month dirs are swept', async () => {
     tmpDir = await mkdtemp(join(tmpdir(), 'retention-test-'))
     await seed(tmpDir, 2025, 11, ['.gdrive-synced'])

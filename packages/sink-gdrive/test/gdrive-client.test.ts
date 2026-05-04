@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { noopLogger } from '@ksef-export/shared'
 
 // Stub googleapis before importing the client
@@ -24,6 +24,11 @@ function makeClient() {
 beforeEach(() => {
   fakeDrive.files.list.mockReset()
   fakeDrive.files.create.mockReset()
+  vi.useFakeTimers()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('GoogleDriveClient.ensureFolder', () => {
@@ -65,6 +70,64 @@ describe('GoogleDriveClient.ensureFolder', () => {
 
     const callArg = fakeDrive.files.list.mock.calls[0][0] as { q: string }
     expect(callArg.q).toContain("name = 'O\\'Brien'")
+  })
+})
+
+describe('GoogleDriveClient retry', () => {
+  it('retries on 500 and succeeds on second attempt', async () => {
+    const serverErr = Object.assign(new Error('server error'), { response: { status: 500 } })
+    fakeDrive.files.list
+      .mockRejectedValueOnce(serverErr)
+      .mockResolvedValueOnce({ data: { files: [{ id: 'retry-id', name: 'Invoices' }] } })
+
+    const client = makeClient()
+    const listPromise = client.ensureFolder('Invoices', 'root')
+    await vi.runAllTimersAsync()
+
+    expect(await listPromise).toBe('retry-id')
+    expect(fakeDrive.files.list).toHaveBeenCalledTimes(2)
+  })
+
+  it('retries on 429 and succeeds on second attempt', async () => {
+    const rateLimitErr = Object.assign(new Error('rate limited'), { response: { status: 429 } })
+    fakeDrive.files.list
+      .mockRejectedValueOnce(rateLimitErr)
+      .mockResolvedValueOnce({ data: { files: [] } })
+    fakeDrive.files.create.mockResolvedValueOnce({ data: { id: 'new-id' } })
+
+    const client = makeClient()
+    const folderPromise = client.ensureFolder('Invoices', 'root')
+    await vi.runAllTimersAsync()
+
+    expect(await folderPromise).toBe('new-id')
+    expect(fakeDrive.files.list).toHaveBeenCalledTimes(2)
+  })
+
+  it('throws after exhausting all 4 attempts', async () => {
+    const serverErr = Object.assign(new Error('always fails'), { response: { status: 503 } })
+    fakeDrive.files.list
+      .mockRejectedValueOnce(serverErr)
+      .mockRejectedValueOnce(serverErr)
+      .mockRejectedValueOnce(serverErr)
+      .mockRejectedValueOnce(serverErr)
+
+    const client = makeClient()
+    const folderPromise = client.ensureFolder('Invoices', 'root')
+    // Attach rejection handler before advancing timers so Node never sees it as unhandled
+    const assertion = expect(folderPromise).rejects.toThrow('always fails')
+    await vi.runAllTimersAsync()
+    await assertion
+
+    expect(fakeDrive.files.list).toHaveBeenCalledTimes(4)
+  })
+
+  it('does not retry on 404', async () => {
+    const notFoundErr = Object.assign(new Error('not found'), { response: { status: 404 } })
+    fakeDrive.files.list.mockRejectedValueOnce(notFoundErr)
+
+    const client = makeClient()
+    await expect(client.ensureFolder('Invoices', 'root')).rejects.toThrow('not found')
+    expect(fakeDrive.files.list).toHaveBeenCalledTimes(1)
   })
 })
 

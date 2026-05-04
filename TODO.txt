@@ -11,24 +11,24 @@ HIGH PRIORITY
 
 MEDIUM PRIORITY
 ---------------
-[ ] Improve error context for missing PDF in uploader
+[x] Improve error context for missing PDF in uploader
       - packages/sink-gdrive/src/uploader.ts ~line 58
       - Include file path and cause in the caught error message
 
-[ ] Restrict retention month regex to 01-12
+[x] Restrict retention month regex to 01-12
       - packages/ksef-downloader/src/retention.ts
-      - Change MONTH_RE to /^\d{4}\/(0[1-9]|1[0-2])$/
+      - Change MONTH_RE to /^(0[1-9]|1[0-2])$/
 
-[ ] Validate SINK_URLS format at startup
+[x] Validate SINK_URLS format at startup
       - packages/ksef-downloader/src/main.ts
 
-[ ] Add retry logic for Google Drive API calls
+[x] Add retry logic for Google Drive API calls
       - packages/sink-gdrive/src/gdrive/client.ts
       - Mirror the retry-with-backoff pattern used in the KSeF client
 
 LOW PRIORITY
 ------------
-[ ] Validate NIP format (must be exactly 10 digits)
+[x] Validate NIP format (must be exactly 10 digits)
       - packages/ksef-downloader/src/main.ts
 
 [ ] Harden Google Drive query string escaping

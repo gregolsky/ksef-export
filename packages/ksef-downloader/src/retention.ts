@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import type { Logger } from '@ksef-export/shared'
 
 const YEAR_RE = /^\d{4}$/
-const MONTH_RE = /^\d{2}$/
+const MONTH_RE = /^(0[1-9]|1[0-2])$/
 
 export async function sweepRetention(
   inboxPath: string,

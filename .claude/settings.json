@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test -- --run 2>&1)",
+      "Bash(pnpm test 2>&1)",
+      "Bash(npm run test:unit 2>&1)",
+      "Bash(npm run test:e2e 2>&1)"
+    ]
+  }
+}

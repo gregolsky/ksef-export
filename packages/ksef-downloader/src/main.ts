@@ -4,6 +4,7 @@ import { syncToInbox } from './syncToInbox.js'
 import { emitToSinks, shutdownSinks } from './eventEmitter.js'
 import { sweepRetention } from './retention.js'
 import { consoleLogger } from './consoleLogger.js'
+import { validateNip, validateSinkUrls } from './validateInputs.js'
 import type { KsefCredentials } from './ksef/client.js'
 
 const program = new Command()
@@ -39,6 +40,26 @@ program
       process.exit(1)
     }
 
+    try {
+      validateNip(ksefNip)
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err))
+      process.exit(1)
+    }
+
+    const envSinkUrls = (process.env['SINK_URLS'] ?? '')
+      .split(',')
+      .map((u) => u.trim())
+      .filter(Boolean)
+    const sinkUrls = [...envSinkUrls, ...opts.sink]
+
+    try {
+      validateSinkUrls(sinkUrls)
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err))
+      process.exit(1)
+    }
+
     const inboxPath = process.env['INBOX_PATH'] ?? '/inbox'
     const ksefEnv = env === 'test' ? 'test' as const : 'prod' as const
 
@@ -56,12 +77,6 @@ program
       console.error('Fatal (download):', err instanceof Error ? err.message : String(err))
       process.exit(1)
     }
-
-    const envSinkUrls = (process.env['SINK_URLS'] ?? '')
-      .split(',')
-      .map((u) => u.trim())
-      .filter(Boolean)
-    const sinkUrls = [...envSinkUrls, ...opts.sink]
 
     const { allFailed } = await emitToSinks(
       sinkUrls,

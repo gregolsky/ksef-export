@@ -55,7 +55,13 @@ export async function handleInvoicesDownloaded(
     const subjectFolderId = await getSubjectFolderId(file.subject)
 
     try {
-      const pdf = await readFile(localPath)
+      let pdf: Buffer
+      try {
+        pdf = await readFile(localPath)
+      } catch (readErr) {
+        const cause = readErr instanceof Error ? readErr.message : String(readErr)
+        throw new Error(`Cannot read PDF at ${localPath}: ${cause}`, { cause: readErr })
+      }
       const { uploaded: wasUploaded } = await gdrive.uploadPdfIfMissing(filename, pdf, subjectFolderId)
       if (wasUploaded) {
         uploaded++
